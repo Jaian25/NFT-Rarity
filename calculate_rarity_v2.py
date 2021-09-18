@@ -5,6 +5,9 @@ version = 1.02
 
 name = 'koala-intelligence-agency'
 
+lowest = 99999999
+highest = -9999999
+
 def calc_traits_rank(cName):
     f = open(f'{cName}.json')
     jsondata = json.load(f)
@@ -15,30 +18,34 @@ def calc_traits_rank(cName):
             #print(j)
             s.add((j[2] , j[0] , j[1]))
     s = sorted(s)
-    prev = 0
-    prev_cnt = 0
+    global highest
+    global lowest
     rare_dict = {}
     for i in s:
         cnt = i[0]
         tag = (i[1],i[2])
-        
-        val = 0
-        if cnt == prev_cnt: 
-            val = prev
-        else:
-            val = prev+1
-        prev = val
-        prev_cnt = cnt
-        rare_dict[tag] = val
+        lowest = min(lowest , cnt)
+        highest = max(highest , cnt)
+        rare_dict[tag] = cnt
     return rare_dict
 
 def calc_Traits_point(ranks):
     point_dict = {}
-    a = 99999999999999999999
+    y1 = 1000000
+    y2 = 5
+    x1 = lowest
+    x2 = highest
+    m = (y1 - y2) / (x1 -x2)
+    #print(m)
     for rank in ranks:
-        power = a / 2**(ranks[rank]-1)
-        point_dict[rank] = power
-        #print(rank,power)
+        points = y1 + m*(ranks[rank] - x1)
+        if ranks[rank] == x1:
+            points = 10000000
+        point_dict[rank] = points
+
+        #print(rank , ranks[rank] , points)
+        
+   # print(lowest,highest)
     return point_dict
 
 def get_points_of_token(cName, token , point_dict):
@@ -47,8 +54,8 @@ def get_points_of_token(cName, token , point_dict):
     zed_points = 0
     for i in jsondata[str(token)]:
         tag = (i[0],i[1])
-        if i[1]!='None':
-            zed_points = zed_points + point_dict[tag]
+        
+        zed_points = zed_points + point_dict[tag]
     print(zed_points,token)
     return zed_points
     
@@ -62,7 +69,6 @@ for i in range(10000):
     rank.append((b,i))
 print('done')
 rank.sort(reverse=True)
-time = str(datetime.datetime.utcnow()) 
 q = open(f'{name}_result.json', 'w', encoding='utf-8')
 json.dump(rank, q, ensure_ascii=False, indent=4)
 
